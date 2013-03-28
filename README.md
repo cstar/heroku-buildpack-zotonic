@@ -55,7 +55,7 @@ Pull requests are very welcome.
 
 ### THANKS
 
-Geoff Cant for writing the base heroku-buildpack-erlang, the starting point of this buildpack. And the Zotonic and Heroky guys.
+Geoff Cant for writing the base heroku-buildpack-erlang, the starting point of this buildpack. And the Zotonic and Heroku guys.
 
 ### AUTHOR
 

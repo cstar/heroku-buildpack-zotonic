@@ -57,6 +57,10 @@ Pull requests are very welcome.
 
 Geoff Cant for writing the base heroku-buildpack-erlang, the starting point of this buildpack. And the Zotonic and Heroku guys.
 
+### ABOUT ZOTONIC
+
+Zotonic is a blazingly fast CMS. Read more about it here: http://www.zotonic.com
+
 ### AUTHOR
 
 Eric Cestari

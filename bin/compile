@@ -28,7 +28,6 @@ export_env_dir() {
 export_env_dir $ENV_DIR
 
 DEFAULT_OTP_VERSION="master"
-OTP_VERSION=$OTP_VERSION
 otp_ver=${OTP_VERSION:=${DEFAULT_OTP_VERSION}}
 tarball=${otp_ver}.tgz
 OTP_TARBALL_URL="https://s3.amazonaws.com/heroku-buildpack-erlang/${tarball}"
@@ -36,7 +35,6 @@ ERLROOT=${build}/otp
 Z_ROOT=${build}/zotonic
 PROFILE=${HOME}/.profile.d
 DEFAULT_ZOTONIC_VERSION="master"
-ZOTONIC_VERSION=$ZOTONIC_VERSION
 z_ver=${ZOTONIC_VERSION:=${DEFAULT_ZOTONIC_VERSION}}
 
 ZOTONIC_TARBALL_URL="https://nodeload.github.com/zotonic/zotonic/tar.gz/${z_ver}"

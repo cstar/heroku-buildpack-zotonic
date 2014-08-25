@@ -9,7 +9,7 @@ main([Src, Dest])->
   {ok, {postgres, UserPass, Host, Port, [$/ | DbName], _}} = http_uri:parse(Url),
   [User, Pass] = string:tokens(UserPass, ":"),
   Params = [{dbhost, Host}, {dbport, Port}, {dbuser, User},
-            {dbpassword, Pass}, {dbdatabase, DbName}, {hostname, none}, 
+            {dbpassword, Pass}, {dbdatabase, DbName},
             {admin_password, Password}],
   Configured = lists:foldl(fun({K, V}, Acc)->
     dict:store(K, V, Acc)

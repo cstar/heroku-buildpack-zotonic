@@ -37,6 +37,9 @@ PROFILE=${HOME}/.profile.d
 DEFAULT_ZOTONIC_VERSION="master"
 z_ver=${ZOTONIC_VERSION:=${DEFAULT_ZOTONIC_VERSION}}
 
+ZOTONIC_ZIP_VERSION=$(echo ${z_ver} | sed 's/release/zotonic/')
+ZOTONIC_ZIP_FILE=${ZOTONIC_ZIP_VERSION}.zip
+ZOTONIC_ZIP_URL="https://github.com/zotonic/zotonic/releases/download/${ZOTONIC_VERSION}/${ZOTONIC_ZIP_FILE}"
 ZOTONIC_TARBALL_URL="https://nodeload.github.com/zotonic/zotonic/tar.gz/${z_ver}"
 z_tarball="zotonic-${z_ver}.tar.gz"
 echo "-----> Using Erlang/OTP $otp_ver"
@@ -56,12 +59,13 @@ echo "-----> Using Zotonic ${z_ver}"
     set -e
 
     # Already cached?
+    #test -f ${cache}/${ZOTONIC_ZIP_FILE} && exit
     #test -f ${cache}/${z_tarball} && exit
 
     #rm -rf ${cache}/* # be sure not to build up cruft
     cd ${cache}
     echo "-------> Fetching Zotonic ${z_ver}"
-    curl -s ${ZOTONIC_TARBALL_URL} > $z_tarball || exit 1
+    (curl -Ls ${ZOTONIC_ZIP_URL} > $ZOTONIC_ZIP_FILE || curl -s ${ZOTONIC_TARBALL_URL} > $z_tarball) || exit 1
 )
 
 # Moving file around
@@ -78,7 +82,18 @@ ${ERLROOT}/Install -minimal /app/otp
 
 echo "-------> Unpacking Zotonic ${z_ver}"
 mkdir -p ${Z_ROOT}
-tar zxf ${cache}/${z_tarball} -C ${build} --strip-components=1
+if [ -f "${cache}/${ZOTONIC_ZIP_FILE}" ]; then
+    echo "-----> Expanding Zotonic ZIP release."
+    mkdir -p /tmp/ziprelease
+    cd /tmp/ziprelease
+    jar xf ${cache}/${ZOTONIC_ZIP_FILE}
+    cd ${build}
+    mv /tmp/ziprelease/zotonic/* ${build}/
+    rm -rf /tmp/ziprelease
+else
+    echo "-----> Expanding Zotonic tarball."
+    tar zxf ${cache}/${z_tarball} -C ${build} --strip-components=1
+fi
 
 rm -Rf ${build}/priv/sites/*
 

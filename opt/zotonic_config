@@ -10,7 +10,7 @@ main([Src, Dest])->
   [User, Pass] = string:tokens(UserPass, ":"),
   Params = [{dbhost, Host}, {dbport, Port}, {dbuser, User},
             {dbpassword, Pass}, {dbdatabase, DbName},
-            {admin_password, Password}],
+            {admin_password, Password}, {dbschema, "public"}],
   Configured = lists:foldl(fun({K, V}, Acc)->
     dict:store(K, V, Acc)
   end, Dict, Params),

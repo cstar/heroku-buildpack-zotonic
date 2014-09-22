@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-# usage: bin/compile <build-dir> <cache-dir>
+# usage: bin/compile <build-dir> <cache-dir> <env-dir>
 
 set -e
 bpdir=$(cd $(dirname $(dirname $0)); pwd)
@@ -10,21 +10,39 @@ build=$(cd "$1/" && pwd)
 test -z ${build} && exit
 cache=$(cd "$2/" && pwd)
 test -z ${cache} && exit
-DEFAULT_OTP_VERSION="master"
-if [ -f ${build}/.preferred_otp_version ]; then
-    OTP_VERSION=$(cat ${build}/.preferred_otp_version)
-fi
-ver=${OTP_VERSION:=${DEFAULT_OTP_VERSION}}
-tarball=${ver}.tgz
+ENV_DIR=$3
+
+export_env_dir() {
+  env_dir=$1
+  whitelist_regex=${2:-'(OTP_VERSION|ZOTONIC_VERSION)'}
+  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
+}
+
+export_env_dir $ENV_DIR
+
+DEFAULT_OTP_VERSION="OTP_R16B03-1"
+otp_ver=${OTP_VERSION:=${DEFAULT_OTP_VERSION}}
+tarball=${otp_ver}.tgz
 OTP_TARBALL_URL="https://s3.amazonaws.com/heroku-buildpack-erlang/${tarball}"
 ERLROOT=${build}/otp
 Z_ROOT=${build}/zotonic
 PROFILE=${HOME}/.profile.d
-z_ver="master"
+DEFAULT_ZOTONIC_VERSION="master"
+z_ver=${ZOTONIC_VERSION:=${DEFAULT_ZOTONIC_VERSION}}
 
+ZOTONIC_ZIP_VERSION=$(echo ${z_ver} | sed 's/release/zotonic/')
+ZOTONIC_ZIP_FILE=${ZOTONIC_ZIP_VERSION}.zip
+ZOTONIC_ZIP_URL="https://github.com/zotonic/zotonic/releases/download/${ZOTONIC_VERSION}/${ZOTONIC_ZIP_FILE}"
 ZOTONIC_TARBALL_URL="https://nodeload.github.com/zotonic/zotonic/tar.gz/${z_ver}"
 z_tarball="zotonic-${z_ver}.tar.gz"
-echo "-----> Using Erlang/OTP $ver"
+echo "-----> Using Erlang/OTP $otp_ver"
 echo "-----> Using Zotonic ${z_ver}"
 (
     set -e
@@ -34,19 +52,20 @@ echo "-----> Using Zotonic ${z_ver}"
 
     #rm -rf ${cache}/* # be sure not to build up cruft
     cd ${cache}
-    echo "-------> Fetching Erlang/OTP $ver"
+    echo "-------> Fetching Erlang/OTP $otp_ver"
     curl -sO ${OTP_TARBALL_URL} || exit 1
 )
 (
     set -e
 
     # Already cached?
+    #test -f ${cache}/${ZOTONIC_ZIP_FILE} && exit
     #test -f ${cache}/${z_tarball} && exit
 
     #rm -rf ${cache}/* # be sure not to build up cruft
     cd ${cache}
     echo "-------> Fetching Zotonic ${z_ver}"
-    curl -s ${ZOTONIC_TARBALL_URL} > $z_tarball || exit 1
+    (curl -Ls ${ZOTONIC_ZIP_URL} > $ZOTONIC_ZIP_FILE || curl -s ${ZOTONIC_TARBALL_URL} > $z_tarball) || exit 1
 )
 
 # Moving file around
@@ -54,16 +73,27 @@ mkdir -p /tmp/site
 mv ${build}/* /tmp/site
 
 
-echo "-------> Unpacking Erlang/OTP $ver"
+echo "-------> Unpacking Erlang/OTP $otp_ver"
 mkdir -p ${ERLROOT}
 tar zxf ${cache}/${tarball} -C ${ERLROOT} --strip-components=2
-echo "-------> Installing Erlang/OTP $ver"
+echo "-------> Installing Erlang/OTP $otp_ver"
 ln -s ${ERLROOT} /app/otp
 ${ERLROOT}/Install -minimal /app/otp
 
 echo "-------> Unpacking Zotonic ${z_ver}"
 mkdir -p ${Z_ROOT}
-tar zxf ${cache}/${z_tarball} -C ${build} --strip-components=1
+if [ -f "${cache}/${ZOTONIC_ZIP_FILE}" ]; then
+    echo "-----> Expanding Zotonic ZIP release."
+    mkdir -p /tmp/ziprelease
+    cd /tmp/ziprelease
+    jar xf ${cache}/${ZOTONIC_ZIP_FILE}
+    cd ${build}
+    mv /tmp/ziprelease/zotonic/* ${build}/
+    rm -rf /tmp/ziprelease
+else
+    echo "-----> Expanding Zotonic tarball."
+    tar zxf ${cache}/${z_tarball} -C ${build} --strip-components=1
+fi
 
 rm -Rf ${build}/priv/sites/*
 

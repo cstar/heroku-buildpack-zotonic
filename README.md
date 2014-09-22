@@ -1,7 +1,7 @@
 ## Heroku buildpack: Zotonic
 
-This is a Heroku buildpack for Zotonic sites.
-Use it for easy and free deployments of Zotonic sites.
+This is a Heroku buildpack for a Zotonic site.
+Use it for easy deployment of a single Zotonic site.
 The buildpack will automatically provision a dev database and configure your Zotonic site to use it.
 
 NOTICE: The git repo to push should only contain a Zotonic site, not the whole Zotonic source.
@@ -18,24 +18,39 @@ or
 
 Set the following environment variables :
 
-  ADMIN_PASSWORD (That's the admin password, obviously)
+* ADMIN_PASSWORD (That's the admin password, obviously)
+* OTP_VERSION (Erlang version to be used, defaults to ```OTP_R16B03-1```)
+* ZOTONIC_VERSION (Defaults to ```master```)
 
 ### Select an Erlang version
 
-The Erlang/OTP release version that will be used to build and run your application is now sourced from a dotfile called `.preferred_otp_version`. It needs to be the branch or tag name from the http://github.com/erlang/otp repository, and further, needs to be one of the versions that precompiled binaries are available for.
+The Erlang/OTP release version that will be used to build and run your application is now sourced from the environment variable ```OTP_VERSION```. It needs to be the branch or tag name from the http://github.com/erlang/otp repository, and further, needs to be one of the versions that precompiled binaries are available for.
 
 Currently supported OTP versions:
 
-* master (R15B02 pre)
-* master-pu (R16B pre)
 * OTP_R15B
 * OTP_R15B01
 * OTP_R15B02
+* OTP_R16B01
+* OTP_R16B02
+* OTP_R16B03-1
 
-To select the version for your app:
+To select the version for your app set environment variable ```OTP_VERSION``` to define Erlang version.
 
-    $ echo OTP_R15B01 > .preferred_otp_version
-    $ git commit "Select R15B01 as preferred OTP version" .preferred_otp_version
+    $ heroku config:set OTP_VERSION=OTP_R16B03-1
+
+### Select Zotonic version
+
+The Zotonic version can be selected via an environment variable similar to the Erlang version. By default the ```master``` branch of Zotonic source is used. To define a release version set the ```ZOTONIC_VERSION``` environment variable.
+
+    $ heroku config:set ZOTONIC_VERSION=release-0.10.1
+
+Here are a few example of possible values for ```ZOTONIC_VERSION```:
+
+* release-0.9.5
+* release-0.10.0
+* release-0.10.0p1
+* release-0.10.1
 
 ### Deploy your site
 
@@ -45,7 +60,7 @@ You may need to write a new commit and push if your code was already up to date.
 
 ### TODO
 
-Select the Zotonic version to deploy. Currently fetches master.
+~~Select the Zotonic version to deploy. Currently fetches master.~~
 
 Fetches deps and rebuilds all Zotonic on each deploys, should use the build cache to only recompile the necessary bits.
 

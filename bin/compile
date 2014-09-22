@@ -27,7 +27,7 @@ export_env_dir() {
 
 export_env_dir $ENV_DIR
 
-DEFAULT_OTP_VERSION="master"
+DEFAULT_OTP_VERSION="OTP_R16B03-2"
 otp_ver=${OTP_VERSION:=${DEFAULT_OTP_VERSION}}
 tarball=${otp_ver}.tgz
 OTP_TARBALL_URL="https://s3.amazonaws.com/heroku-buildpack-erlang/${tarball}"
